@@ -67,6 +67,6 @@
 <br/>
 
 <img 
-  src="https://gitlab.com/yandex-courses/frontend/internal/homeworks/js/02-phonebook/wikis/uploads/d3d03900d50ffc8b6675fe4b054bb99d/docs_images_secret-tests.png"
+  src="https://yastatic.net/s3/lyceum/ifmo-homeworks/secret-tests-meme.png"
   title="Мем про секретные тесты"
 />
