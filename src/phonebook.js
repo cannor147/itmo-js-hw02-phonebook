@@ -80,7 +80,7 @@ function update(phone, name, email) {
  * @returns {string[]}
  */
 function find(query) {
-  let result;
+  let result = [];
   if (!isNonEmptyString(query)) {
     return result;
   } else if (query === '*') {
@@ -111,10 +111,12 @@ function find(query) {
  * @returns {number}
  */
 function findAndRemove(query) {
-  let result;
   if (!isNonEmptyString(query)) {
     return 0;
-  } else if (query === '*') {
+  }
+
+  let result;
+  if (query === '*') {
     result = phoneBook;
   } else {
     result = Object.keys(phoneBook).filter(
@@ -125,7 +127,7 @@ function findAndRemove(query) {
     );
   }
 
-  result.forEach(function(phone) {
+  result.map(function(phone) {
     delete phoneBook[phone];
   });
 
