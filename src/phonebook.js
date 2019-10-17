@@ -40,10 +40,7 @@ function toString(argument) {
  * @returns {boolean}
  */
 function add(phone, name, email) {
-  if (!validatePhone(phone)) {
-    return false;
-  }
-  if (!isNonEmptyString(name) || (!isNonEmptyString(email) && typeof email !== 'undefined')) {
+  if (!validatePhone(phone) || !isNonEmptyString(name) || (email && typeof email !== 'string')) {
     return false;
   }
 
@@ -64,7 +61,7 @@ function add(phone, name, email) {
  * @returns {boolean}
  */
 function update(phone, name, email) {
-  if (!validatePhone(phone)) {
+  if (!validatePhone(phone) || !isNonEmptyString(name) || (email && typeof email !== 'string')) {
     return false;
   }
 
