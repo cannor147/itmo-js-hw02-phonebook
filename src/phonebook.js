@@ -11,14 +11,6 @@ const isExtraTaskSolved = false;
  */
 const phoneBook = {};
 
-const phoneValidator = /^(\d\d\d)(\d\d\d)(\d\d)(\d\d)$/;
-function validatePhone(phone) {
-  return typeof phone === 'string' && phoneValidator.test(phone);
-}
-function formatPhone(phone) {
-  return phone.replace(phoneValidator, '+7 ($1) $2-$3-$4');
-}
-
 function isNonEmptyString(argument) {
   return typeof argument === 'string' && argument !== '';
 }
@@ -32,6 +24,21 @@ function toString(argument) {
   return argument.toString();
 }
 
+const phoneValidator = /^(\d\d\d)(\d\d\d)(\d\d)(\d\d)$/;
+function formatPhone(phone) {
+  return phone.replace(phoneValidator, '+7 ($1) $2-$3-$4');
+}
+function validatePhone(phone) {
+  return typeof phone === 'string' && phoneValidator.test(phone);
+}
+function validateArguments(phone, name, email) {
+  return (
+    validatePhone(phone) &&
+    isNonEmptyString(name) &&
+    (typeof email === 'undefined' || typeof email === 'string')
+  );
+}
+
 /**
  * Добавление записи в телефонную книгу
  * @param {string} phone
@@ -40,7 +47,7 @@ function toString(argument) {
  * @returns {boolean}
  */
 function add(phone, name, email) {
-  if (!validatePhone(phone) || !isNonEmptyString(name) || (email && typeof email !== 'string')) {
+  if (!validateArguments(phone, name, email)) {
     return false;
   }
 
@@ -61,7 +68,7 @@ function add(phone, name, email) {
  * @returns {boolean}
  */
 function update(phone, name, email) {
-  if (!validatePhone(phone) || !isNonEmptyString(name) || (email && typeof email !== 'string')) {
+  if (!validateArguments(phone, name, email)) {
     return false;
   }
 
@@ -74,12 +81,7 @@ function update(phone, name, email) {
   return updated;
 }
 
-/**
- * Поиск записей по запросу в телефонной книге
- * @param {string} query
- * @returns {string[]}
- */
-function find(query) {
+function internalFind(query) {
   let result = [];
   if (!isNonEmptyString(query)) {
     return result;
@@ -94,7 +96,16 @@ function find(query) {
     );
   }
 
-  return result
+  return result;
+}
+
+/**
+ * Поиск записей по запросу в телефонной книге
+ * @param {string} query
+ * @returns {string[]}
+ */
+function find(query) {
+  return internalFind(query)
     .map(phone =>
       toString(phoneBook[phone]['name']).concat(
         ', ',
@@ -114,19 +125,7 @@ function findAndRemove(query) {
   if (!isNonEmptyString(query)) {
     return 0;
   }
-
-  let result;
-  if (query === '*') {
-    result = phoneBook;
-  } else {
-    result = Object.keys(phoneBook).filter(
-      phone =>
-        phone.includes(query) ||
-        phoneBook[phone]['name'].includes(query) ||
-        toString(phoneBook[phone]['email']).includes(query)
-    );
-  }
-
+  const result = internalFind(query);
   result.map(function(phone) {
     delete phoneBook[phone];
   });
