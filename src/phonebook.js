@@ -11,9 +11,24 @@ const isExtraTaskSolved = false;
  */
 const phoneBook = {};
 
-function isNonEmptyString(argument) {
-  return typeof argument === 'string' && argument !== '';
+const PHONE_VALIDATOR = /^(\d\d\d)(\d\d\d)(\d\d)(\d\d)$/;
+
+function ensureString(argument) {
+  return typeof argument === 'string';
 }
+function ensurePhoneNumber(argument) {
+  return ensureString(argument) && PHONE_VALIDATOR.test(argument);
+}
+function ensureNonEmptyString(argument) {
+  return ensureString(argument) && argument !== '';
+}
+function ensureStringIfSpecified(argument) {
+  return typeof argument === 'undefined' || ensureString(argument);
+}
+function ensureContact(phone, name, email) {
+  return ensurePhoneNumber(phone) && ensureNonEmptyString(name) && ensureStringIfSpecified(email);
+}
+
 function toString(argument) {
   if (typeof argument === 'string') {
     return argument;
@@ -23,20 +38,8 @@ function toString(argument) {
 
   return argument.toString();
 }
-
-const phoneValidator = /^(\d\d\d)(\d\d\d)(\d\d)(\d\d)$/;
 function formatPhone(phone) {
-  return phone.replace(phoneValidator, '+7 ($1) $2-$3-$4');
-}
-function validatePhone(phone) {
-  return typeof phone === 'string' && phoneValidator.test(phone);
-}
-function validateArguments(phone, name, email) {
-  return (
-    validatePhone(phone) &&
-    isNonEmptyString(name) &&
-    (typeof email === 'undefined' || typeof email === 'string')
-  );
+  return phone.replace(PHONE_VALIDATOR, '+7 ($1) $2-$3-$4');
 }
 
 /**
@@ -47,7 +50,7 @@ function validateArguments(phone, name, email) {
  * @returns {boolean}
  */
 function add(phone, name, email) {
-  if (!validateArguments(phone, name, email)) {
+  if (!ensureContact(phone, name, email)) {
     return false;
   }
 
@@ -68,7 +71,7 @@ function add(phone, name, email) {
  * @returns {boolean}
  */
 function update(phone, name, email) {
-  if (!validateArguments(phone, name, email)) {
+  if (!ensureContact(phone, name, email)) {
     return false;
   }
 
@@ -83,7 +86,7 @@ function update(phone, name, email) {
 
 function internalFind(query) {
   let result = [];
-  if (!isNonEmptyString(query)) {
+  if (!ensureNonEmptyString(query)) {
     return result;
   } else if (query === '*') {
     result = Object.keys(phoneBook);
@@ -105,15 +108,24 @@ function internalFind(query) {
  * @returns {string[]}
  */
 function find(query) {
+  if (!ensureString(query)) {
+    throw new TypeError('Query should be a string.');
+  }
+
   return internalFind(query)
-    .map(phone =>
-      toString(phoneBook[phone]['name']).concat(
+    .map(phone => ({
+      phone: phone,
+      name: phoneBook[phone]['name'],
+      email: phoneBook[phone]['email']
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(contact =>
+      toString(contact.name).concat(
         ', ',
-        toString(formatPhone(phone)),
-        toString(phoneBook[phone]['email'] !== undefined ? ', ' + phoneBook[phone]['email'] : '')
+        toString(formatPhone(contact.phone)),
+        toString(contact.email !== undefined ? ', ' + contact.email : '')
       )
-    )
-    .sort();
+    );
 }
 
 /**
@@ -122,15 +134,18 @@ function find(query) {
  * @returns {number}
  */
 function findAndRemove(query) {
-  if (!isNonEmptyString(query)) {
+  if (!ensureString(query)) {
+    throw new TypeError('Query should be a string.');
+  } else if (!ensureNonEmptyString(query)) {
     return 0;
   }
-  const result = internalFind(query);
-  result.map(function(phone) {
+
+  const deletingPhones = internalFind(query);
+  deletingPhones.map(function(phone) {
     delete phoneBook[phone];
   });
 
-  return result.length;
+  return deletingPhones.length;
 }
 
 /**
